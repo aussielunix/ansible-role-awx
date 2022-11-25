@@ -1,0 +1,4 @@
+---
+# file: vars/Debian.yml
+
+awx_packages: []

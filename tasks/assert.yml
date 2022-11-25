@@ -1,0 +1,20 @@
+---
+
+# https://docs.ansible.com/ansible/latest/collections/ansible/builtin/assert_module.html
+
+- name: "Assert not to run on anything other than Python 3"
+  ansible.builtin.assert:
+    that:
+      - ansible_python.version.major == 3
+    quiet: true
+
+# - name: "Test if contojo.awx_X is set correctly"
+#   ansible.builtin.assert:
+#     that:
+#       - awx_X is defined
+#       - awx_X is iterable
+#       - awx_X is number
+#       - awx_X is boolean
+#       - awx_X = 0
+#       - awx_X in [ "a", "b" ]
+#     quiet: true
