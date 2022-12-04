@@ -1,0 +1,33 @@
+---
+
+- name: Create a private key for the new receptor CA
+  community.crypto.openssl_privatekey:
+    path: files/receptor-ca.key
+- name: Create certificate signing request (CSR) for the recptor CA
+  community.crypto.openssl_csr:
+    path: files/receptor-ca.csr
+    privatekey_path: files/receptor-ca.key
+    common_name: "AWX POC CA"
+    use_common_name_for_san: false  # since we do not specify SANs, don't use CN as a SAN
+    basic_constraints:
+      - 'CA:TRUE'
+    basic_constraints_critical: true
+    key_usage:
+      - keyCertSign
+    key_usage_critical: true
+  register: ca_csr
+- name: Create self-signed receptor CA certificate from CSR
+  community.crypto.x509_certificate:
+    path: files/receptor-ca.crt
+    csr_path: files/receptor-ca.csr
+    privatekey_path: files/receptor-ca.key
+    provider: selfsigned
+
+# https://receptor.readthedocs.io/en/latest/workceptor.html#signed-work
+- name: Generate a receptor signer private key
+  community.crypto.openssl_privatekey:
+    path: files/work-private-key.pem
+- name: Generate a receptor signer public key
+  community.crypto.openssl_publickey:
+    path: files/work-public-key.pem
+    privatekey_path: files/work-private-key.pem

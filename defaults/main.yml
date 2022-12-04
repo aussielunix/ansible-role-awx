@@ -1,1 +1,46 @@
 ---
+
+# AWX
+awx_user: awx
+awx_group: awx
+awx_uid: 1000
+awx_gid: 1000
+awx_directory: /opt/awx
+
+awx_broadcast_websocket_port: 443
+awx_broadcast_websocket_protocol: https
+awx_cluster_node_system_uuid: ""
+awx_no_log: true
+awx_started: true
+awx_secret_key: xxx
+
+awx_pg_directory: /opt/postgres
+awx_pg_database: awx
+awx_pg_username: awx
+awx_pg_password: awx
+awx_pg_hostname: 127.0.0.1
+awx_pg_port: 5432
+awx_pg_sslmode: prefer
+awx_pg_version: 13
+
+awx_image_registry: quay.io
+awx_image: awx
+awx_image_tag: 21.7.0
+awx_image_url: "{{ awx_image_registry }}/ansible/{{ awx_image }}:{{ awx_image_tag }}"
+
+awx_admin_username: ""
+awx_admin_password: ""
+
+awx_redis_version: 7
+awx_ee_image_url: "quay.io/ansible/awx-ee:latest"
+
+awx_receptor_log_level: info
+awx_cluster_primary_node: ""
+awx_node_action: ignore
+
+awx_controllers: false
+awx_workers: false
+awx_tlsgen: false
+
+awx_ami_bake: false
+awx_local_database: false

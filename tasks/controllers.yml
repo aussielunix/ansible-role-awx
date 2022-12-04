@@ -1,0 +1,130 @@
+---
+
+- name: Create AWX directories
+  ansible.builtin.file:
+    name: "{{ directory.name }}"
+    mode: "{{ directory.mode }}"
+    owner: "{{ directory.owner | default(awx_uid) }}"
+    group: "{{ directory.group | default(awx_gid) }}"
+    state: directory
+  loop:
+    - { name: "{{ awx_directory }}", mode: "00755", owner: root, group: root }
+    - { name: "{{ awx_directory }}/projects", mode: "00775" }
+    - { name: "{{ awx_directory }}/tls", mode: "00770" }
+    - { name: "{{ awx_directory }}/receptor", mode: "00770" }
+    - { name: "{{ awx_directory }}/containers", mode: "00775" }
+    - { name: "{{ awx_directory }}/receptor_socket", mode: "00750" }
+    - { name: "{{ awx_directory }}/supervisor-socket", mode: "00750" }
+    - { name: "{{ awx_directory }}/rsyslog-socket", mode: "00750" }
+    - { name: "{{ awx_directory }}/rsyslog-config", mode: "00750" }
+    - { name: "{{ awx_directory }}/redis_socket", mode: "00777", owner: root, group: root }
+  loop_control:
+    loop_var: directory
+
+- name: Template AWX configuration files
+  ansible.builtin.template:
+    src: "{{ config.src }}"
+    dest: "{{ awx_directory }}/{{ config.dst }}"
+    mode: "{{ config.mode }}"
+    owner: '{{ config.owner | default(awx_uid) }}'
+    group: '{{ config.group | default(awx_gid) }}'
+  loop:
+    - { src: docker-compose.yml.j2, dst: docker-compose.yml, mode: "00600", owner: "root", group: "root" }
+    - { src: settings.py.j2, dst: settings.py, mode: "00600" }
+    - { src: credentials.py.j2, dst: credentials.py, mode: "00600" }
+    - { src: redis.conf.j2, dst: redis.conf, mode: "00664" }
+    - { src: awx-nginx.conf.j2, dst: awx-nginx.conf, mode: "00640" }
+    - { src: SECRET_KEY.j2, dst: SECRET_KEY, mode: "00600" }
+    - { src: launch_awx_task.sh.j2, dst: launch_awx_task.sh, mode: "00744" }
+    - { src: launch_awx.sh.j2, dst: launch_awx.sh, mode: "00744" }
+    - { src: receptor-default.conf.j2, dst: receptor-default.conf, mode: "00644" }
+    - { src: receptor.sh.j2, dst: receptor.sh, mode: "00644" }
+    - { src: execution_environments.py.j2, dst: execution_environments.py, mode: "00644" }
+    - { src: environment.sh.j2, dst: environment.sh, mode: "00600" }
+  loop_control:
+    loop_var: config
+  no_log: "{{ awx_no_log }}"
+  register: awx_configs
+
+- name: Copy in receptor certificates
+  ansible.builtin.copy:
+    src: "files/{{ tls_file.src }}"
+    dest: "{{ awx_directory }}/tls"
+    owner: "{{ tls_file.owner | default(awx_uid) }}"
+    group: "{{ tls_file.group | default(awx_gid) }}"
+    mode: "{{ tls_file.mode }}"
+  loop:
+    - { src: work-private-key.pem, dst: work-private-key.pem, mode: "00400" }
+    - { src: work-public-key.pem, dst: work-public-key.pem, mode: "00644" }
+    - { src: receptor-ca.crt, dst: receptor-ca.crt, mode: "00644" }
+    - { src: receptor-ca.key, dst: receptor-ca.key, mode: "00600" }
+    - { src: "{{ inventory_hostname }}.crt", dst: receptor.crt, mode: "00777" }  # :FIXME: 0777 is bad
+    - { src: "{{ inventory_hostname }}.key", dst: receptor.key, mode: "00777" }
+  loop_control:
+    loop_var: tls_file
+  when: not awx_ami_bake
+
+- name: Create Postgres directories
+  ansible.builtin.file:
+    name: "{{ pg_directory }}"
+    state: directory
+    mode: "00755"
+  with_items:
+    - "{{ awx_pg_directory }}"
+    - "{{ awx_pg_directory }}/data"
+  loop_control:
+    loop_var: pg_directory
+  when: awx_local_database or not awx_ami_bake
+
+- name: Template Postgres configuration files
+  ansible.builtin.template:
+    src: "{{ pg_config.src }}"
+    dest: "{{ awx_pg_directory }}/{{ pg_config.dst }}"
+    mode: "00600"
+  with_items:
+    - { src: docker-compose-postgres.yml.j2, dst: docker-compose.yml }
+  loop_control:
+    loop_var: pg_config
+  no_log: "{{ awx_no_log }}"
+  register: postgres_configs
+  when: awx_local_database or not awx_ami_bake
+
+- name: Debug ami_bake
+  ansible.builtin.debug:
+    var: "{{ item }}"
+    verbosity: 2
+  loop:
+    - ami_bake
+    - awx_tlsgen
+    - awx_started
+    - awx_local_database
+
+- name: Start || Restart Postgres containers
+  community.docker.docker_compose:
+    project_name: postgres
+    project_src: "{{ awx_pg_directory }}"
+    restarted: "{{ postgres_configs is changed | bool }}"
+  when: awx_local_database or not awx_ami_bake
+
+- name: Start || Restart AWX containers
+  community.docker.docker_compose:
+    project_name: awx
+    project_src: "{{ awx_directory }}"
+    restarted: "{{ awx_configs is changed | bool }}"
+  when: awx_started or not awx_ami_bake
+
+- name: Test AWX is available
+  ansible.builtin.uri:
+    url: "http://{{ groups['controllers'][0] }}:8052"
+    method: GET
+  register: _result
+  until: _result.status == 200
+  retries: 30
+  delay: 10
+  when: not awx_ami_bake
+
+- name: Debug -  uri _results
+  ansible.builtin.debug:
+    var: _result
+    verbosity: 2
+  when: not awx_ami_bake

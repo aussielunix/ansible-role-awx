@@ -1,0 +1,35 @@
+---
+
+awx_workers: true
+awx_tlsgen: true
+awx_node_role_type: execution
+
+podman_user: receptor
+podman_group: receptor
+
+receptor_verify: true
+receptor_tls: true
+custom_worksign_public_keyfile: files/work-public-key.pem
+custom_tls_certfile: "files/{{ inventory_hostname }}.crt"
+custom_tls_keyfile: "files/{{ inventory_hostname }}.key"
+custom_ca_certfile: files/receptor-ca.crt
+custom_ca_keyfile: files/receptor-ca.key
+
+receptor_work_commands:
+  ansible-runner:
+    command: ansible-runner
+    params: worker
+    allowruntimeparams: true
+    verifysignature: true
+
+receptor_user: receptor
+receptor_group: receptor
+receptor_protocol: 'tcp'
+receptor_listener: true
+receptor_port: 27199
+receptor_dependencies:
+  - ansible-core
+  - python3-pip
+  - python3-pip-wheel
+
+routable_hostname: "{{ ansible_fqdn }}"

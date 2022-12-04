@@ -1,2 +1,5 @@
 .cache/
 .vagrant/
+tests/vagrant/roles/
+tests/vagrant/files/*
+!tests/vagrant/files/.gitkeep

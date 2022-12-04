@@ -1,0 +1,55 @@
+# AWX settings file
+
+import os
+import socket
+# Import all so that extra_settings works properly
+from django_auth_ldap.config import *
+
+def get_secret():
+    if os.path.exists("/etc/tower/SECRET_KEY"):
+        return open('/etc/tower/SECRET_KEY', 'rb').read().strip()
+
+
+ADMINS = ()
+STATIC_ROOT = '/var/lib/awx/public/static'
+PROJECTS_ROOT = '/var/lib/awx/projects'
+JOBOUTPUT_ROOT = '/var/lib/awx/job_status'
+
+# Let's make the AWX think it's a K8S
+IS_K8S = True
+
+SECRET_KEY = get_secret()
+
+ALLOWED_HOSTS = ['*']
+
+# Sets Ansible Collection path
+AWX_ANSIBLE_COLLECTIONS_PATHS = '/var/lib/awx/vendor/awx_ansible_collections'
+
+# Container environments don't like chroots
+AWX_PROOT_ENABLED = False
+
+# Do not automatically deprovision pods that go offline (API containers)
+AWX_AUTO_DEPROVISION_INSTANCES = False
+
+CLUSTER_HOST_ID = "{{ awx_cluster_node_host_id }}"
+SYSTEM_UUID = '{{ awx_cluster_node_system_uuid }}'
+
+CSRF_COOKIE_SECURE = False
+SESSION_COOKIE_SECURE = False
+
+SERVER_EMAIL = 'root@localhost'
+DEFAULT_FROM_EMAIL = 'webmaster@localhost'
+EMAIL_SUBJECT_PREFIX = '[AWX] '
+
+EMAIL_HOST = 'localhost'
+EMAIL_PORT = 25
+EMAIL_HOST_USER = ''
+EMAIL_HOST_PASSWORD = ''
+EMAIL_USE_TLS = False
+
+USE_X_FORWARDED_HOST = True
+USE_X_FORWARDED_PORT = True
+
+BROADCAST_WEBSOCKET_PORT = {{ awx_broadcast_websocket_port }}
+BROADCAST_WEBSOCKET_PROTOCOL = '{{ awx_broadcast_websocket_protocol }}'
+BROADCAST_WEBSOCKET_VERIFY_CERT = False

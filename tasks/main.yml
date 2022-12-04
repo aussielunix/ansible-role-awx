@@ -1,15 +1,48 @@
 ---
 
-- name: include set_vars.yml
-  ansible.builtin.import_tasks: set_vars.yml
-
-- name: include assert.yml
+- name: Include assert.yml
   ansible.builtin.import_tasks: assert.yml
   run_once: true
   delegate_to: localhost
 
-- name: "Install packages for contojo.awx"
-  become: true
-  ansible.builtin.package:
-    name: "{{ awx_packages }}"
-    state: present
+- name: Debug feature_flags
+  ansible.builtin.debug:
+    var: "{{ item }}"
+  loop:
+    - ami_bake
+    - awx_tlsgen
+    - awx_started
+    - awx_controllers
+    - awx_local_database
+    - awx_workers
+
+- name: Include TLS CA generation
+  ansible.builtin.import_tasks: tls_controllers.yml
+  delegate_to: localhost
+  become: false
+  when:
+    - awx_controllers is defined
+    - awx_controllers | bool
+    - awx_tlsgen is defined
+    - awx_tlsgen | bool
+
+- name: Include receptor TLS generation tasks
+  ansible.builtin.import_tasks: tls_workers.yml
+  delegate_to: localhost
+  become: false
+  when:
+    - (awx_controllers is defined and awx_controllers | bool) or
+      (awx_workers is defined and awx_workers | bool)
+    - awx_tlsgen is defined and awx_tlsgen | bool
+
+- name: Include AWX control node tasks
+  ansible.builtin.import_tasks: "controllers.yml"
+  when:
+    - awx_controllers is defined
+    - awx_controllers | bool
+
+- name: Include AWX worker node tasks
+  ansible.builtin.import_tasks: "workers.yml"
+  when:
+    - awx_workers is defined
+    - awx_workers | bool

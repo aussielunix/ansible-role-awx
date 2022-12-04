@@ -1,0 +1,27 @@
+---
+
+# Should be true for production
+awx_no_log: false
+
+# Generate unique value with `echo 'import uuid; print(uuid.uuid4())' | /usr/bin/python3`
+awx_cluster_node_system_uuid: 83df7748-5bb6-439e-b35d-42493991fb36
+
+awx_broadcast_websocket_secret: hYGRJzMykZY68A3NFiLKQVgCop8H8y
+awx_secret_key: "qLlWFR2RBZ3a6tYACxM9inqt2yYxMxIR"
+
+awx_admin_username: admin
+awx_admin_password: Ansible123123123
+
+# image for running a hybrid node
+# awx_ee_image_url: docker.io/t42x/awx-ha-cluster-ee:latest
+
+podman_user: receptor
+podman_group: receptor
+awx_node_action: register
+
+awx_cluster_primary_node: "{{ groups['controllers'][0] }}"
+
+awx_tlsgen: true
+awx_started: true
+awx_ami_bake: false
+awx_local_database: true

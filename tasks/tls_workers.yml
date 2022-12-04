@@ -1,0 +1,44 @@
+---
+
+- name: Debug | hostvars
+  ansible.builtin.debug:
+    var: hostvars
+    verbosity: 2
+
+- name: Debug | vars
+  ansible.builtin.debug:
+    var: vars
+    verbosity: 2
+
+- name: Debug | environment
+  ansible.builtin.debug:
+    var: environment
+    verbosity: 2
+
+- name: Generate TLS cert for receptor on {{ inventory_hostname }}
+  block:
+    - name: Create private key - {{ inventory_hostname }}
+      community.crypto.openssl_privatekey:
+        size: 2048
+        path: "files/{{ inventory_hostname }}.key"
+    - name: Generate an OpenSSL Certificate Signing Request with Subject information - {{ inventory_hostname }}
+      community.crypto.openssl_csr:
+        path: "files/{{ inventory_hostname }}.csr"
+        privatekey_path: "files/{{ inventory_hostname }}.key"
+        common_name: "{{ inventory_hostname }}"
+        key_usage:
+          - digitalSignature
+        key_usage_critical: true
+        extended_key_usage:
+          - clientAuth
+          - serverAuth
+        subject_alt_name:
+          - "DNS:{{ inventory_hostname }}"
+          - "otherName:1.3.6.1.4.1.2312.19.1;UTF8:{{ inventory_hostname }}"
+    - name: Generate an OpenSSL certificate signed with your own CA certificate - {{ inventory_hostname }}
+      community.crypto.x509_certificate:
+        path: "files/{{ inventory_hostname }}.crt"
+        csr_path: "files/{{ inventory_hostname }}.csr"
+        ownca_path: "files/receptor-ca.crt"
+        ownca_privatekey_path: "files/receptor-ca.key"
+        provider: ownca

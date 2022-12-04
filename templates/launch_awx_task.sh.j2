@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+if [ `id -u` -ge 500 ]; then
+    echo "awx:x:`id -u`:`id -g`:,,,:/var/lib/awx:/bin/bash" >> /tmp/passwd
+    cat /tmp/passwd > /etc/passwd
+    rm /tmp/passwd
+fi
+
+if [ -z "$AWX_SKIP_MIGRATIONS" ]; then
+    awx-manage migrate --noinput
+fi
+
+source /etc/tower/conf.d/environment.sh
+
+# :FIXME:
+if [ ! -z "$AWX_ADMIN_USER" ]&&[ ! -z "$AWX_ADMIN_PASSWORD" ]; then
+    echo "from django.contrib.auth.models import User; User.objects.create_superuser('$AWX_ADMIN_USER', 'root@localhost', '$AWX_ADMIN_PASSWORD')" | awx-manage shell
+fi
+
+unset $(cut -d = -f -1 /etc/tower/conf.d/environment.sh)
+
+if [ -z "$AWX_SKIP_PROVISION_INSTANCE" ]; then
+    awx-manage provision_instance --hostname={{ awx_cluster_node_host_id }} --node_type={{ awx_node_role_type }}
+fi
+
+if [ -z "$AWX_SKIP_REGISTER_QUEUE" ]; then
+    awx-manage register_queue --queuename=controlplane --instance_percent=100 --hostnames={{ awx_cluster_node_host_id }}
+{% if awx_node_role_type == 'hybrid' %}
+    awx-manage register_queue --queuename=default --instance_percent=100
+{% endif %}
+fi
+
+if [ -z "$AWX_SKIP_REGISTER_DEFAULT_EE" ]; then
+    awx-manage register_default_execution_environments
+fi
+
+set -e
+
+wait-for-migrations
+
+supervisord -c /etc/supervisord_task.conf

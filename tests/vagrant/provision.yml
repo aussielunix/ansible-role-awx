@@ -1,0 +1,15 @@
+---
+
+- hosts: all
+  become: true
+  pre_tasks:
+    - name: update dnf caches
+      ansible.builtin.dnf:
+        update_cache: true
+        name: "*"
+        state: latest
+  roles:
+    - role: geerlingguy.pip
+    - role: geerlingguy.docker
+      when: inventory_hostname in groups["controllers"]
+    - role: aussielunix.awx
