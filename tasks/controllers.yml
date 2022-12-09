@@ -118,3 +118,11 @@
     var: _result
     verbosity: 2
   when: not awx_ami_bake
+
+- name: Start || Restart AWX EE container
+  community.docker.docker_compose:
+    project_name: awx
+    services: awx-ee
+    project_src: "{{ awx_directory }}"
+    restarted: "{{ awx_configs is changed | bool }}"
+
