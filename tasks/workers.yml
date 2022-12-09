@@ -21,6 +21,7 @@
         name: ansible-runner
         executable: pip3.9
 - name: Register / deregister receptor execution (worker) node
+  when: awx_node_action == "unregister" or awx_node_action == "register"
   block:
     - name: Register executor/worker nodes
       community.docker.docker_container_exec:
@@ -46,4 +47,3 @@
       register: deprovision_execution_node
       changed_when: "'changed: True' in deprovision_execution_node.stdout"
       when: awx_node_action == "unregister"
-  when: awx_node_action == "unregister" or awx_node_action == "register"
