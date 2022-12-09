@@ -125,4 +125,3 @@
     services: awx-ee
     project_src: "{{ awx_directory }}"
     restarted: "{{ awx_configs is changed | bool }}"
-
