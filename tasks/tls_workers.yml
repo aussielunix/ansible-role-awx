@@ -1,20 +1,5 @@
 ---
 
-- name: Debug | hostvars
-  ansible.builtin.debug:
-    var: hostvars
-    verbosity: 2
-
-- name: Debug | vars
-  ansible.builtin.debug:
-    var: vars
-    verbosity: 2
-
-- name: Debug | environment
-  ansible.builtin.debug:
-    var: environment
-    verbosity: 2
-
 - name: Generate TLS cert for receptor on {{ inventory_hostname }}
   block:
     - name: Create private key - {{ inventory_hostname }}

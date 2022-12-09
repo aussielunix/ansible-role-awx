@@ -8,6 +8,7 @@
 - name: Debug feature_flags
   ansible.builtin.debug:
     var: "{{ item }}"
+    verbosity: 2
   loop:
     - ami_bake
     - awx_tlsgen
@@ -15,6 +16,7 @@
     - awx_controllers
     - awx_local_database
     - awx_workers
+    - awx_node_action
 
 - name: Include TLS CA generation
   ansible.builtin.import_tasks: tls_controllers.yml

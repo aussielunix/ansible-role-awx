@@ -89,16 +89,6 @@
   register: postgres_configs
   when: awx_local_database or not awx_ami_bake
 
-- name: Debug ami_bake
-  ansible.builtin.debug:
-    var: "{{ item }}"
-    verbosity: 2
-  loop:
-    - ami_bake
-    - awx_tlsgen
-    - awx_started
-    - awx_local_database
-
 - name: Start || Restart Postgres containers
   community.docker.docker_compose:
     project_name: postgres
