@@ -17,6 +17,7 @@
     - awx_local_database
     - awx_workers
     - awx_node_action
+    - awx_no_log
 
 - name: Include TLS CA generation
   ansible.builtin.import_tasks: tls_controllers.yml
