@@ -62,7 +62,6 @@
     - { src: "{{ inventory_hostname }}.key", dst: receptor.key, mode: "00777" }
   loop_control:
     loop_var: tls_file
-  when: not awx_ami_bake
 
 - name: Create Postgres directories
   ansible.builtin.file:
@@ -74,7 +73,7 @@
     - "{{ awx_pg_directory }}/data"
   loop_control:
     loop_var: pg_directory
-  when: awx_local_database or not awx_ami_bake
+  when: awx_local_database | bool
 
 - name: Template Postgres configuration files
   ansible.builtin.template:
@@ -87,21 +86,21 @@
     loop_var: pg_config
   no_log: "{{ awx_no_log }}"
   register: postgres_configs
-  when: awx_local_database or not awx_ami_bake
+  when: awx_local_database | bool
 
 - name: Start || Restart Postgres containers
   community.docker.docker_compose:
     project_name: postgres
     project_src: "{{ awx_pg_directory }}"
     restarted: "{{ postgres_configs is changed | bool }}"
-  when: awx_local_database or not awx_ami_bake
+  when: awx_local_database | bool
 
 - name: Start || Restart AWX containers
   community.docker.docker_compose:
     project_name: awx
     project_src: "{{ awx_directory }}"
     restarted: "{{ awx_configs is changed | bool }}"
-  when: awx_started or not awx_ami_bake
+  when: awx_started
 
 - name: Test AWX is available
   ansible.builtin.uri:
@@ -111,13 +110,13 @@
   until: _result.status == 200
   retries: 30
   delay: 10
-  when: not awx_ami_bake
+  when: awx_started
 
 - name: Debug -  uri _results
   ansible.builtin.debug:
     var: _result
     verbosity: 2
-  when: not awx_ami_bake
+  when: awx_started
 
 - name: Start || Restart AWX EE container
   community.docker.docker_compose:
@@ -125,3 +124,4 @@
     services: awx-ee
     project_src: "{{ awx_directory }}"
     restarted: "{{ awx_configs is changed | bool }}"
+  when: awx_started

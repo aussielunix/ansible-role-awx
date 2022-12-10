@@ -42,5 +42,4 @@ awx_controllers: false
 awx_workers: false
 awx_tlsgen: false
 
-awx_ami_bake: false
 awx_local_database: false
