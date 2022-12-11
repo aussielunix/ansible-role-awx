@@ -14,6 +14,7 @@ awx_no_log: true
 awx_secret_key: xxx
 awx_started: true
 
+awx_local_database: false
 awx_pg_directory: /opt/postgres
 awx_pg_database: awx
 awx_pg_username: awx
@@ -36,10 +37,11 @@ awx_ee_image_url: "quay.io/ansible/awx-ee:latest"
 
 awx_receptor_log_level: info
 awx_cluster_primary_node: ""
-awx_node_action: ignore
 
-awx_controllers: false
-awx_workers: false
 awx_tlsgen: false
 
-awx_local_database: false
+awx_node_type: ""  # control|execution
+awx_node_action: ignore # register|unregister|ignore
+
+awx_controller_manage: false
+awx_execution_manage: false

@@ -1,4 +1,4 @@
 ---
 
 awx_controllers: true
-awx_node_role_type: control
+awx_node_type: control

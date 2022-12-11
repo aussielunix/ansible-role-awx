@@ -19,12 +19,12 @@ fi
 unset $(cut -d = -f -1 /etc/tower/conf.d/environment.sh)
 
 if [ -z "$AWX_SKIP_PROVISION_INSTANCE" ]; then
-    awx-manage provision_instance --hostname={{ awx_cluster_node_host_id }} --node_type={{ awx_node_role_type }}
+    awx-manage provision_instance --hostname={{ awx_cluster_node_host_id }} --node_type={{ awx_node_type }}
 fi
 
 if [ -z "$AWX_SKIP_REGISTER_QUEUE" ]; then
     awx-manage register_queue --queuename=controlplane --instance_percent=100 --hostnames={{ awx_cluster_node_host_id }}
-{% if awx_node_role_type == 'hybrid' %}
+{% if awx_node_type == 'hybrid' %}
     awx-manage register_queue --queuename=default --instance_percent=100
 {% endif %}
 fi

@@ -1,6 +1,6 @@
 ---
 
-- name: Install and prepare receptor execution (worker) node
+- name: Install and prepare receptor execution(worker) node
   block:
     - name: Create the receptor user
       ansible.builtin.user:
@@ -20,18 +20,17 @@
       ansible.builtin.pip:
         name: ansible-runner
         executable: pip3.9
-- name: Register / deregister receptor execution (worker) node
-  when: awx_node_action == "unregister" or awx_node_action == "register"
+- name: Register / deregister receptor execution(worker) node
   block:
-    - name: Register executor/worker nodes
+    - name: Register execution(worker) nodes
       community.docker.docker_container_exec:
         container: awx-task
-        command: /bin/bash -c "awx-manage provision_instance --hostname '{{ awx_cluster_node_host_id }}' --node_type '{{ awx_node_role_type }}'"
+        command: /bin/bash -c "awx-manage provision_instance --hostname '{{ awx_cluster_node_host_id }}' --node_type '{{ awx_node_type }}'"
       delegate_to: "{{ awx_cluster_primary_node }}"
       register: provision_execution_node
       changed_when: "'changed: True' in provision_execution_node.stdout"
       when: awx_node_action == "register"
-    - name: Add executor/worker node to Instance Group
+    - name: Add execution(worker) node to Instance Group
       community.docker.docker_container_exec:
         container: awx-task
         command: /bin/bash -c "awx-manage register_queue --queuename default --instance_percent 100 --hostnames='{{ awx_cluster_node_host_id }}'"
@@ -39,7 +38,7 @@
       register: provision_execution_node_ig
       changed_when: "'changed: True' in provision_execution_node_ig.stdout"
       when: awx_node_action == "register"
-    - name: Unregister executor/worker nodes
+    - name: Unregister execution(worker) nodes
       community.docker.docker_container_exec:
         container: awx-task
         command: /bin/bash -c "awx-manage deprovision_instance --hostname '{{ awx_cluster_node_host_id }}'"
@@ -47,3 +46,4 @@
       register: deprovision_execution_node
       changed_when: "'changed: True' in deprovision_execution_node.stdout"
       when: awx_node_action == "unregister"
+  when: awx_node_action == "unregister" or awx_node_action == "register"

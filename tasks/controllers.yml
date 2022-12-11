@@ -104,7 +104,7 @@
 
 - name: Test AWX is available
   ansible.builtin.uri:
-    url: "http://{{ groups['controllers'][0] }}:8052"
+    url: "http://{{ inventory_hostname }}:8052"
     method: GET
   register: _result
   until: _result.status == 200

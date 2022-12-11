@@ -10,42 +10,43 @@
     var: "{{ item }}"
     verbosity: 2
   loop:
-    - ami_bake
     - awx_tlsgen
     - awx_started
-    - awx_controllers
+    - awx_controller_manage
+    - awx_execution_manage
     - awx_local_database
-    - awx_workers
     - awx_node_action
-    - awx_no_log
 
-- name: Include TLS CA generation
-  ansible.builtin.import_tasks: tls_controllers.yml
+- name: Include Receptor TLS CA generation
+  ansible.builtin.import_tasks: receptor_tls_ca.yml
+  run_once: true
   delegate_to: localhost
   become: false
   when:
-    - awx_controllers is defined
-    - awx_controllers | bool
+    - awx_controller_manage is defined
+    - awx_controller_manage | bool
     - awx_tlsgen is defined
     - awx_tlsgen | bool
 
-- name: Include receptor TLS generation tasks
-  ansible.builtin.import_tasks: tls_workers.yml
+- name: Include receptor execution node TLS generation tasks
+  ansible.builtin.import_tasks: receptor_tls_execution.yml
   delegate_to: localhost
   become: false
   when:
-    - (awx_controllers is defined and awx_controllers | bool) or
-      (awx_workers is defined and awx_workers | bool)
+    - (awx_controller_manage is defined and awx_controller_manage | bool) or
+      (awx_execution_manage is defined and awx_execution_manage | bool)
     - awx_tlsgen is defined and awx_tlsgen | bool
 
 - name: Include AWX control node tasks
   ansible.builtin.import_tasks: "controllers.yml"
   when:
-    - awx_controllers is defined
-    - awx_controllers | bool
+    - awx_controller_manage is defined
+    - awx_controller_manage | bool
+    - awx_node_type == "control"
 
-- name: Include AWX worker node tasks
-  ansible.builtin.import_tasks: "workers.yml"
+- name: Include AWX execution node tasks
+  ansible.builtin.import_tasks: "execution.yml"
   when:
-    - awx_workers is defined
-    - awx_workers | bool
+    - awx_execution_manage is defined
+    - awx_execution_manage | bool
+    - awx_node_type == "execution"

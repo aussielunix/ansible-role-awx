@@ -1,8 +1,8 @@
 ---
 
-awx_workers: true
+awx_execution_manage: true
 awx_tlsgen: true
-awx_node_role_type: execution
+awx_node_type: execution
 
 podman_user: receptor
 podman_group: receptor
