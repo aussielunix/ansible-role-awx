@@ -100,7 +100,7 @@
     project_name: awx
     project_src: "{{ awx_directory }}"
     restarted: "{{ awx_configs is changed | bool }}"
-  when: awx_started
+  when: awx_started | bool
 
 - name: Test AWX is available
   ansible.builtin.uri:
@@ -110,13 +110,13 @@
   until: _result.status == 200
   retries: 30
   delay: 10
-  when: awx_started
+  when: awx_started | bool
 
 - name: Debug -  uri _results
   ansible.builtin.debug:
     var: _result
     verbosity: 2
-  when: awx_started
+  when: awx_started | bool
 
 - name: Start || Restart AWX EE container
   community.docker.docker_compose:
@@ -124,4 +124,4 @@
     services: awx-ee
     project_src: "{{ awx_directory }}"
     restarted: "{{ awx_configs is changed | bool }}"
-  when: awx_started
+  when: awx_started | bool
