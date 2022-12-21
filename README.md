@@ -6,9 +6,7 @@
 
 | OS Family | Distribution  | Latest | Supported Version(s) | Comment |
 |-----------|---------------|--------|----------------------|---------|
-| Debian    | Debian        | :x: | 10 | |
-| Debian    | Debian        | :heavy_check_mark: | 11 | |
-| Debian    | Ubuntu        | :x: | 22.04 | |
+| EL        | CentOS        | :x: | Stream9 | |
 
 ## Requirements
 
