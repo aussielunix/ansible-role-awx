@@ -39,6 +39,7 @@ services:
     restart: unless-stopped
     network_mode: host
     volumes:
+      - "{{ awx_directory }}/receptor:/etc/receptor/:rw"
       - "{{ awx_directory }}/supervisor-socket:/var/run/supervisor:rw"
       - "{{ awx_directory }}/rsyslog-socket:/var/run/awx-rsyslog:rw"
       - "{{ awx_directory }}/rsyslog-config:/var/lib/awx/rsyslog:rw"
@@ -52,7 +53,6 @@ services:
       - "{{ awx_directory }}/environment.sh:/etc/tower/conf.d/environment.sh:ro"
       - "{{ awx_directory }}/redis_socket:/var/run/redis/:rw"
       - "{{ awx_directory }}/projects:/var/lib/awx/projects:rw"
-      - "{{ awx_directory }}/receptor:/etc/receptor/:rw"
     environment:
       SUPERVISOR_WEB_CONFIG_PATH: '/etc/supervisord.conf'
 
@@ -65,16 +65,16 @@ services:
     restart: unless-stopped
     network_mode: host
     volumes:
+      - "{{ awx_directory }}/receptor:/etc/receptor/:rw"
       - "{{ awx_directory }}/receptor_socket:/var/run/receptor/:rw"
       - "{{ awx_directory }}/projects:/var/lib/awx/projects:rw"
-      - "{{ awx_directory }}/receptor:/etc/receptor/:rw"
       - "{{ awx_directory }}/containers:/home/runner/.local/share/containers/:rw"
       - "{{ awx_directory }}/receptor.sh:/receptor.sh:ro"
       - "{{ awx_directory }}/tls/receptor-ca.crt:/etc/receptor/tls/ca/receptor-ca.crt:ro"
       - "{{ awx_directory }}/receptor-default.conf:/etc/receptor/receptor-default.conf:ro"
       - "{{ awx_directory }}/tls/work-private-key.pem:/etc/receptor/signing/work-private-key.pem:ro"
-      - "{{ awx_directory }}/tls/{{ inventory_hostname }}.crt:/etc/receptor/tls/receptor.crt:ro"
-      - "{{ awx_directory }}/tls/{{ inventory_hostname }}.key:/etc/receptor/tls/receptor.key:ro"
+      - "{{ awx_directory }}/tls/receptor.crt:/etc/receptor/tls/receptor.crt:ro"
+      - "{{ awx_directory }}/tls/receptor.key:/etc/receptor/tls/receptor.key:ro"
 
   redis:
     image: redis:{{ awx_redis_version }}

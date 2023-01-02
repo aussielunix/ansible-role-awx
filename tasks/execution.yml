@@ -1,6 +1,6 @@
 ---
 
-- name: Install and prepare receptor execution(worker) node
+- name: prepare receptor execution(worker) node
   block:
     - name: Create the receptor user
       ansible.builtin.user:
@@ -13,14 +13,51 @@
     - name: Import podman setup role
       ansible.builtin.import_role:
         name: ansible.receptor.podman
-    - name: Import ansible receptor setup role
-      ansible.builtin.import_role:
-        name: ansible.receptor.setup
-    - name: Install ansible-runner
-      ansible.builtin.pip:
-        name: ansible-runner
-        executable: pip3.9
-- name: Register / deregister receptor execution(worker) node
+
+- name: receptor - Generate below the mesh TLS certs
+  ansible.builtin.import_tasks: receptor_tls_certs.yml
+
+# Slurp up the ca cert/key and set as fact to distribute to other nodes
+- name: Slurp up receptor CA crt from "{{ awx_cluster_primary_node }}"
+  delegate_to: "{{ awx_cluster_primary_node }}"
+  ansible.builtin.slurp:
+    src: "{{ awx_directory }}/tls/receptor-ca.crt"
+  register: _receptor_ca_crt
+
+- name: Slurp up receptor CA key from "{{ awx_cluster_primary_node }}"
+  delegate_to: "{{ awx_cluster_primary_node }}"
+  ansible.builtin.slurp:
+    src: "{{ awx_directory }}/tls/receptor-ca.key"
+  register: _receptor_ca_key
+
+- name: Set receptor_ca_crt as fact
+  ansible.builtin.set_fact:
+    receptor_ca_crt: "{{ _receptor_ca_crt.content | b64decode }}"
+
+- name: Set receptor_ca_key as fact
+  ansible.builtin.set_fact:
+    receptor_ca_key: "{{ _receptor_ca_key.content | b64decode }}"
+
+- name: Slurp up receptor work signing pub key
+  delegate_to: "{{ awx_cluster_primary_node }}"
+  ansible.builtin.slurp:
+    src: "{{ awx_directory }}/tls/work-public-key.pem"
+  register: work_sign_public_key
+
+- name: Set receptor work signing pub key as fact
+  ansible.builtin.set_fact:
+    receptor_worksign_public_key: "{{ work_sign_public_key.content | b64decode }}"
+  no_log: "{{ awx_no_log }}"
+
+- name: Import ansible receptor setup role
+  ansible.builtin.import_role:
+    name: ansible.receptor.setup
+- name: Install ansible-runner
+  ansible.builtin.pip:
+    name: ansible-runner
+    executable: pip3.9
+
+- name: Add new execution(worker) node
   block:
     - name: Register execution(worker) nodes
       community.docker.docker_container_exec:
@@ -29,7 +66,7 @@
       delegate_to: "{{ awx_cluster_primary_node }}"
       register: provision_execution_node
       changed_when: "'changed: True' in provision_execution_node.stdout"
-      when: awx_node_action == "register"
+
     - name: Add execution(worker) node to Instance Group
       community.docker.docker_container_exec:
         container: awx-task
@@ -37,7 +74,11 @@
       delegate_to: "{{ awx_cluster_primary_node }}"
       register: provision_execution_node_ig
       changed_when: "'changed: True' in provision_execution_node_ig.stdout"
-      when: awx_node_action == "register"
+  when: awx_node_action == "register"
+
+    # :FIXME:
+- name: Remove execution(worker) node
+  block:
     - name: Unregister execution(worker) nodes
       community.docker.docker_container_exec:
         container: awx-task
@@ -45,5 +86,4 @@
       delegate_to: "{{ awx_cluster_primary_node }}"
       register: deprovision_execution_node
       changed_when: "'changed: True' in deprovision_execution_node.stdout"
-      when: awx_node_action == "unregister"
-  when: awx_node_action == "unregister" or awx_node_action == "register"
+  when: awx_node_action == "unregister"

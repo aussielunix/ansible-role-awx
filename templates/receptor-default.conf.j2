@@ -1,4 +1,4 @@
-- log-level: {{ awx_receptor_log_level }}
+- log-level: {{ receptor_log_level }}
 - local-only: null
 - node:
    firewallrules:
@@ -13,18 +13,6 @@
     worktype: local
     command: ansible-runner
     params: worker
-    allowruntimeparams: true
-- work-kubernetes:
-    worktype: kubernetes-runtime-auth
-    authmethod: runtime
-    allowruntimeauth: true
-    allowruntimepod: true
-    allowruntimeparams: true
-- work-kubernetes:
-    worktype: kubernetes-incluster-auth
-    authmethod: incluster
-    allowruntimeauth: true
-    allowruntimepod: true
     allowruntimeparams: true
 - tls-client:
     cert: /etc/receptor/tls/receptor.crt

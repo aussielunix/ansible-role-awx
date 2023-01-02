@@ -10,32 +10,11 @@
     var: "{{ item }}"
     verbosity: 2
   loop:
-    - awx_tlsgen
     - awx_started
     - awx_controller_manage
     - awx_execution_manage
     - awx_local_database
     - awx_node_action
-
-- name: Include Receptor TLS CA generation
-  ansible.builtin.import_tasks: receptor_tls_ca.yml
-  run_once: true
-  delegate_to: localhost
-  become: false
-  when:
-    - awx_controller_manage is defined
-    - awx_controller_manage | bool
-    - awx_tlsgen is defined
-    - awx_tlsgen | bool
-
-- name: Include receptor execution node TLS generation tasks
-  ansible.builtin.import_tasks: receptor_tls_execution.yml
-  delegate_to: localhost
-  become: false
-  when:
-    - (awx_controller_manage is defined and awx_controller_manage | bool) or
-      (awx_execution_manage is defined and awx_execution_manage | bool)
-    - awx_tlsgen is defined and awx_tlsgen | bool
 
 - name: Include AWX control node tasks
   ansible.builtin.import_tasks: "controllers.yml"

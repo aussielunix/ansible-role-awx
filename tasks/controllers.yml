@@ -21,6 +21,15 @@
   loop_control:
     loop_var: directory
 
+- name: Generate receptor CA cert and key
+  ansible.builtin.import_tasks: receptor_tls_ca.yml
+
+- name: Generate receptor job signing cert and key
+  ansible.builtin.import_tasks: receptor_tls_signer.yml
+
+- name: Generate receptor cert and key
+  ansible.builtin.import_tasks: receptor_tls_certs.yml
+
 - name: Template AWX configuration files
   ansible.builtin.template:
     src: "{{ config.src }}"
@@ -41,27 +50,16 @@
     - { src: receptor.sh.j2, dst: receptor.sh, mode: "00644" }
     - { src: execution_environments.py.j2, dst: execution_environments.py, mode: "00644" }
     - { src: environment.sh.j2, dst: environment.sh, mode: "00600" }
+    - { src: work-private-key.pem.j2, dst: tls/work-private-key.pem, mode: "00600" }
+    - { src: work-public-key.pem.j2, dst: tls/work-public-key.pem, mode: "00600" }
+    - { src: receptor-ca.crt.j2, dst: tls/receptor-ca.crt, mode: "00640" }
+    - { src: receptor-ca.key.j2, dst: tls/receptor-ca.key, mode: "00600" }
+    - { src: receptor.crt.j2, dst: tls/receptor.crt, mode: "00640" }
+    - { src: receptor.key.j2, dst: tls/receptor.key, mode: "00600" }
   loop_control:
     loop_var: config
   no_log: "{{ awx_no_log }}"
   register: awx_configs
-
-- name: Copy in receptor certificates
-  ansible.builtin.copy:
-    src: "files/{{ tls_file.src }}"
-    dest: "{{ awx_directory }}/tls"
-    owner: "{{ tls_file.owner | default(awx_uid) }}"
-    group: "{{ tls_file.group | default(awx_gid) }}"
-    mode: "{{ tls_file.mode }}"
-  loop:
-    - { src: work-private-key.pem, dst: work-private-key.pem, mode: "00400" }
-    - { src: work-public-key.pem, dst: work-public-key.pem, mode: "00644" }
-    - { src: receptor-ca.crt, dst: receptor-ca.crt, mode: "00644" }
-    - { src: receptor-ca.key, dst: receptor-ca.key, mode: "00600" }
-    - { src: "{{ inventory_hostname }}.crt", dst: receptor.crt, mode: "00777" }  # :FIXME: 0777 is bad
-    - { src: "{{ inventory_hostname }}.key", dst: receptor.key, mode: "00777" }
-  loop_control:
-    loop_var: tls_file
 
 - name: Create Postgres directories
   ansible.builtin.file:

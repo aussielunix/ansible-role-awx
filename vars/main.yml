@@ -1,4 +1,4 @@
 ---
 
 awx_cluster_node_host_id: "{{ inventory_hostname }}"
-awx_receptor_user: receptor
+receptor_user: receptor

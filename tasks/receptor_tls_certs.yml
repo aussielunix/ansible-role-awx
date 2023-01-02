@@ -1,0 +1,58 @@
+---
+
+# receptor
+# mutual TLS authentication and encryption for below the mesh connections
+- name: Create receptor private key - {{ inventory_hostname }}
+  delegate_to: "{{ awx_cluster_primary_node }}"
+  no_log: "{{ awx_no_log }}"
+  community.crypto.openssl_privatekey:
+    size: 2048
+    path: "{{ awx_directory }}/tls/{{ inventory_hostname }}.key"
+
+- name: Create receptor tls csr - {{ inventory_hostname }}
+  delegate_to: "{{ awx_cluster_primary_node }}"
+  no_log: "{{ awx_no_log }}"
+  community.crypto.openssl_csr:
+    path: "{{ awx_directory }}/tls/{{ inventory_hostname }}.csr"
+    privatekey_path: "{{ awx_directory }}/tls/{{ inventory_hostname }}.key"
+    common_name: "{{ inventory_hostname }}"
+    key_usage:
+      - digitalSignature
+    key_usage_critical: true
+    extended_key_usage:
+      - clientAuth
+      - serverAuth
+    subject_alt_name:
+      - "DNS:{{ inventory_hostname }}"
+      - "otherName:1.3.6.1.4.1.2312.19.1;UTF8:{{ inventory_hostname }}"
+
+- name: Create TLS cert signed with your own CA - {{ inventory_hostname }}
+  delegate_to: "{{ awx_cluster_primary_node }}"
+  no_log: "{{ awx_no_log }}"
+  community.crypto.x509_certificate:
+    path: "{{ awx_directory }}/tls/{{ inventory_hostname }}.crt"
+    csr_path: "{{ awx_directory }}/tls/{{ inventory_hostname }}.csr"
+    ownca_path: "{{ awx_directory }}/tls/receptor-ca.crt"
+    ownca_privatekey_path: "{{ awx_directory }}/tls/receptor-ca.key"
+    provider: ownca
+
+# Slurp up certs/keys and set as facts to distribute to other nodes
+- name: Slurp up TLS crt for receptor - {{ inventory_hostname }}
+  delegate_to: "{{ awx_cluster_primary_node }}"
+  ansible.builtin.slurp:
+    src: "{{ awx_directory }}/tls/{{ inventory_hostname }}.crt"
+  register: _receptor_tls_crt
+
+- name: Slurp up TLS key for receptor - {{ inventory_hostname }}
+  delegate_to: "{{ awx_cluster_primary_node }}"
+  ansible.builtin.slurp:
+    src: "{{ awx_directory }}/tls/{{ inventory_hostname }}.key"
+  register: _receptor_tls_key
+
+- name: Set receptor_tls_key as fact
+  ansible.builtin.set_fact:
+    receptor_tls_key: "{{ _receptor_tls_key.content | b64decode }}"
+
+- name: Set receptor_tls_crt as fact
+  ansible.builtin.set_fact:
+    receptor_tls_crt: "{{ _receptor_tls_crt.content | b64decode }}"

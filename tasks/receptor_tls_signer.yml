@@ -1,0 +1,36 @@
+---
+
+# https://receptor.readthedocs.io/en/latest/workceptor.html#signed-work
+- name: Generate a receptor signer private key
+  delegate_to: "{{ awx_cluster_primary_node }}"
+  no_log: "{{ awx_no_log }}"
+  community.crypto.openssl_privatekey:
+    path: "{{ awx_directory }}/tls/work-private-key.pem"
+
+- name: Generate a receptor signer public key
+  delegate_to: "{{ awx_cluster_primary_node }}"
+  no_log: "{{ awx_no_log }}"
+  community.crypto.openssl_publickey:
+    path: "{{ awx_directory }}/tls/work-public-key.pem"
+    privatekey_path: "{{ awx_directory }}/tls/work-private-key.pem"
+
+# Slurp up the pub/priv keys and set as facts to distribute to other nodes
+- name: Slurp up receptor signer private key
+  delegate_to: "{{ awx_cluster_primary_node }}"
+  ansible.builtin.slurp:
+    src: "{{ awx_directory }}/tls/work-private-key.pem"
+  register: _receptor_worksign_private_key
+
+- name: Slurp up receptor signer public key
+  delegate_to: "{{ awx_cluster_primary_node }}"
+  ansible.builtin.slurp:
+    src: "{{ awx_directory }}/tls/work-public-key.pem"
+  register: _receptor_worksign_public_key
+
+- name: Set receptor_worksign_private_key fact
+  ansible.builtin.set_fact:
+    receptor_worksign_private_key: "{{ _receptor_worksign_private_key.content | b64decode }}"
+
+- name: Set receptor_worksign_public_key fact
+  ansible.builtin.set_fact:
+    receptor_worksign_public_key: "{{ _receptor_worksign_public_key.content | b64decode }}"

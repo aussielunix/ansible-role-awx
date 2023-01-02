@@ -1,8 +1,12 @@
 ---
 
+# role feature toggles
+awx_controller_manage: false
+awx_execution_manage: false
+awx_node_action: ignore  # register|unregister|ignore
+awx_no_log: true
+
 # AWX
-awx_user: awx
-awx_group: awx
 awx_uid: 1000
 awx_gid: 1000
 awx_directory: /opt/awx
@@ -10,7 +14,6 @@ awx_directory: /opt/awx
 awx_broadcast_websocket_port: 443
 awx_broadcast_websocket_protocol: https
 awx_cluster_node_system_uuid: ""
-awx_no_log: true
 awx_secret_key: xxx
 awx_started: true
 
@@ -35,13 +38,14 @@ awx_admin_password: ""
 awx_redis_version: 7
 awx_ee_image_url: "quay.io/ansible/awx-ee:latest"
 
-awx_receptor_log_level: info
+awx_node_type: ""  # control|execution
 awx_cluster_primary_node: ""
 
-awx_tlsgen: false
-
-awx_node_type: ""  # control|execution
-awx_node_action: ignore # register|unregister|ignore
-
-awx_controller_manage: false
-awx_execution_manage: false
+# receptor
+receptor_log_level: info
+receptor_worksign_private_key: ""
+receptor_worksign_public_key: ""
+receptor_ca_crt: ""
+receptor_ca_key: ""
+receptor_tls_crt: ""
+receptor_tls_key: ""
