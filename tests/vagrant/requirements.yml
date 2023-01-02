@@ -13,5 +13,4 @@ collections:
 
 roles:
   - name: geerlingguy.docker
-    src: https://github.com/geerlingguy/ansible-role-docker.git
   - name: geerlingguy.pip

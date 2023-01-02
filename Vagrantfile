@@ -38,7 +38,7 @@ Vagrant.configure("2") do |config|
     config.vm.define box[:name] do |box_config|
       box_config.vm.hostname = box[:hostname]
       box_config.vm.box = "roboxes/centos9s"
-      box_config.vm.network "private_network", type: "dhcp", :libvirt__domain_name => "home.arpa"
+      box_config.vm.network "private_network", type: "dhcp", :libvirt__domain_name => "home.arpa", :libvirt__forward_mode => "none"
       box_config.vm.provider :libvirt do |v|
         v.memory = box[:memory]
         v.cpus = box[:cpus]
@@ -51,7 +51,7 @@ Vagrant.configure("2") do |config|
         box_config.vm.provision :ansible do |ansible|
           ansible.limit = "all"
           ansible.playbook = "tests/vagrant/provision.yml"
-          ansible.verbose = "-v"
+          ansible.verbose = "-vvv"
           #ansible.verbose = false
           ansible.groups = {
             "controllers" => ["controller-1.home.arpa"],
@@ -67,4 +67,3 @@ Vagrant.configure("2") do |config|
     end
   end
 end
-

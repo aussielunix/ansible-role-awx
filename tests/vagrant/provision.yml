@@ -12,4 +12,4 @@
     - role: geerlingguy.pip
     - role: geerlingguy.docker
       when: inventory_hostname in groups["controllers"]
-    - role: aussielunix.awx
+    - role: ../../.
