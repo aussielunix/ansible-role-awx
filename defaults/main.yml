@@ -1,12 +1,14 @@
 ---
 
-# role feature toggles
+## role feature toggles
 awx_controller_manage: false
 awx_execution_manage: false
 awx_node_action: ignore  # register|unregister|ignore
 awx_no_log: true
+# Allows to install AWX without starting it
+awx_started: true
 
-# AWX
+## AWX
 awx_uid: 1000
 awx_gid: 1000
 awx_directory: /opt/awx
@@ -15,7 +17,6 @@ awx_broadcast_websocket_port: 443
 awx_broadcast_websocket_protocol: https
 awx_cluster_node_system_uuid: ""
 awx_secret_key: xxx
-awx_started: true
 
 awx_local_database: false
 awx_pg_directory: /opt/postgres
