@@ -56,6 +56,7 @@
     - { src: receptor-ca.key.j2, dst: tls/receptor-ca.key, mode: "00600" }
     - { src: receptor.crt.j2, dst: tls/receptor.crt, mode: "00640" }
     - { src: receptor.key.j2, dst: tls/receptor.key, mode: "00600" }
+    - { src: awx_main_tasks_system_monkeypatch.py.j2, dst: awx_main_tasks_system_monkeypatch.py, mode: "00644" }
   loop_control:
     loop_var: config
   no_log: "{{ awx_no_log }}"

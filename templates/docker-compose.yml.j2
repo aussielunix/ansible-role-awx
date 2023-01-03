@@ -53,6 +53,7 @@ services:
       - "{{ awx_directory }}/environment.sh:/etc/tower/conf.d/environment.sh:ro"
       - "{{ awx_directory }}/redis_socket:/var/run/redis/:rw"
       - "{{ awx_directory }}/projects:/var/lib/awx/projects:rw"
+      - "{{ awx_directory }}/awx_main_tasks_system_monkeypatch.py:/var/lib/awx/venv/awx/lib/python3.9/site-packages/awx/main/tasks/system.py:ro"
     environment:
       SUPERVISOR_WEB_CONFIG_PATH: '/etc/supervisord.conf'
 
